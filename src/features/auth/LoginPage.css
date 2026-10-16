@@ -1,118 +1,130 @@
-/* ---------- page + card ---------- */
-.login-bg {
-    min-height: 100vh;
-    background: linear-gradient(135deg, #4f46e5 0%, #8c5ae3 50%, #ed428f 100%);
+/* LoginPage.css
+   Every colour is set explicitly (no reliance on Bootstrap 5 CSS variables),
+   so it works on Bootstrap 4 and 5 and beats global Vite/CRA styles. */
+
+.login-page {
+  background-color: #f5f4ef;
+  color: #1c1b18;
+  color-scheme: light;
 }
 
-.login-card {
-    max-width: 440px;
-    border-radius: 1.5rem;
+/* Card */
+.login-page .login-card {
+  max-width: 440px;
+  width: 100%;
+  background-color: #fffef9;
+  color: #1c1b18;
+  border: 1px solid #e6e4dc;
+  border-radius: 24px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.06);
 }
 
-.login-badge {
-    width: 64px;
-    height: 64px;
-    border-radius: 1.1rem;
-    background: linear-gradient(135deg, #4f46e5, #7c3aed);
-    box-shadow: 0 0.75rem 1.5rem rgba(79, 70, 229, 0.35);
+/* Logo */
+.login-page .login-logo {
+  width: 56px;
+  height: 56px;
+  background-color: #344b3c;
+  color: #ffffff;
+  border-radius: 16px;
+  font-size: 24px;
+  font-weight: 700;
 }
 
-.login-progress {
-    height: 6px;
+/* Text */
+.login-page .login-title {
+  color: #1c1b18;
+  font-size: 2rem;
+  font-weight: 700;
 }
 
-.login-progress-bar {
-    background: linear-gradient(90deg, #17c3b2, #4f46e5);
-    transition: width 0.4s ease;
+.login-page .login-subtitle {
+  color: #7a7870;
+  font-size: 1.25rem;
 }
 
-/* ---------- inputs ---------- */
-.login-card .form-control:focus {
-    border-color: #7c3aed;
-    box-shadow: 0 0 0 0.25rem rgba(124, 58, 237, 0.2);
+.login-page .login-label {
+  color: #4a4943;
+  font-weight: 500;
 }
 
-/* ---------- OTP boxes ---------- */
-.otp-row {
-    display: flex;
-    justify-content: space-between;
-    gap: 0.5rem;
+.login-page .login-footer {
+  color: #7a7870;
 }
 
-.otp-input {
-    width: 3rem;
-    height: 3.5rem;
-    padding: 0;
-    font-size: 1.5rem;
-    font-weight: 700;
-    text-align: center;
-    transition: transform 0.15s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+/* Inputs */
+.login-page .form-control.login-input {
+  background-color: #ffffff;
+  color: #1c1b18;
+  border: 1px solid #e0ded6;
+  border-radius: 14px;
+  font-size: 18px;
+  box-shadow: none;
 }
 
-.otp-input:focus {
-    transform: translateY(-2px);
+.login-page .form-control.login-input::placeholder {
+  color: #8c8a82;
+  opacity: 1;
 }
 
-.otp-input--filled {
-    border-color: #4f46e5;
-    color: #4338ca;
+.login-page .form-control.login-input:focus {
+  background-color: #ffffff;
+  color: #1c1b18;
+  border-color: #344b3c;
+  box-shadow: 0 0 0 0.2rem rgba(52, 75, 60, 0.2);
+  outline: 0;
 }
 
-/* ---------- buttons + links ---------- */
-.btn-gradient {
-    background: linear-gradient(120deg, #4f46e5, #7c3aed);
-    border: 0;
-    color: #fff;
-    transition: transform 0.15s ease, box-shadow 0.2s ease;
+.login-page .form-control.login-input:disabled {
+  background-color: #f3f2ec;
+  color: #7a7870;
 }
 
-.btn-gradient:hover:not(:disabled) {
-    color: #fff;
-    transform: translateY(-2px);
-    box-shadow: 0 0.75rem 1.25rem rgba(79, 70, 229, 0.4);
+/* Button */
+.login-page .btn.btn-brand {
+  background-color: #344b3c;
+  border: 1px solid #344b3c;
+  color: #ffffff;
+  border-radius: 14px;
+  font-size: 18px;
+  font-weight: 600;
 }
 
-.btn-gradient:disabled {
-    color: #fff;
-    opacity: 0.55;
+.login-page .btn.btn-brand:hover {
+  background-color: #2a3d31;
+  border-color: #2a3d31;
+  color: #ffffff;
 }
 
-.login-link {
-    color: #4f46e5;
-    font-weight: 600;
-    text-decoration: none;
+.login-page .btn.btn-brand:focus,
+.login-page .btn.btn-brand:focus-visible {
+  background-color: #2a3d31;
+  border-color: #2a3d31;
+  color: #ffffff;
+  box-shadow: 0 0 0 0.2rem rgba(52, 75, 60, 0.35);
+  outline: 0;
 }
 
-.login-link:hover {
-    color: #4338ca;
-    text-decoration: underline;
+.login-page .btn.btn-brand:active {
+  background-color: #213027;
+  border-color: #213027;
+  color: #ffffff;
 }
 
-/* ---------- invalid OTP shake ---------- */
-.login-shake {
-    animation: login-shake 0.4s;
+.login-page .btn.btn-brand:disabled,
+.login-page .btn.btn-brand.disabled {
+  background-color: #344b3c;
+  border-color: #344b3c;
+  color: #ffffff;
+  opacity: 0.65;
 }
 
-@keyframes login-shake {
-    20%, 60% { transform: translateX(-7px); }
-    40%, 80% { transform: translateX(7px); }
+.login-page .login-spinner {
+  margin-right: 0.5rem;
 }
 
-/* ---------- responsive + reduced motion ---------- */
-@media (max-width: 400px) {
-    .otp-input {
-        width: 2.5rem;
-        height: 3rem;
-        font-size: 1.25rem;
-    }
-}
-
-@media (prefers-reduced-motion: reduce) {
-    .login-shake,
-    .login-progress-bar,
-    .btn-gradient,
-    .otp-input {
-        animation: none;
-        transition: none;
-    }
+/* Small screens */
+@media (max-width: 575.98px) {
+  .login-page .login-card {
+    border-radius: 20px;
+  }
 }
