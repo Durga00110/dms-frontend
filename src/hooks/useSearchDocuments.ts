@@ -3,7 +3,7 @@ import { useMutation } from '@tanstack/react-query';
 import {
   searchDocuments,
   type SearchDocumentPayload,
-} from '../services/documentService';
+} from '../services/documentSearchService';
 
 interface SearchVariables {
   payload: SearchDocumentPayload;

@@ -1,29 +1,18 @@
 import { useRef, useState } from 'react';
-import type { ChangeEvent, DragEvent, KeyboardEvent } from 'react';
+import type { ChangeEvent, DragEvent, FormEvent, KeyboardEvent } from 'react';
 
 // Bootstrap must load BEFORE our own CSS so our overrides win.
 import 'bootstrap/dist/css/bootstrap.min.css';
 import './UploadForm.css';
 
+// Adjust the path to wherever you saved the service.
+import { uploadDocument } from '../../services/documentUploadService';
+
 /* ---------------------------------------------------------------------------
-   Static UI only: no API calls, no validation, no react-query.
-   Sample data below stands in for real options and uploads.
+   Sample data stands in for real options and recent uploads until those
+   endpoints are wired up.
    --------------------------------------------------------------------------- */
 
-interface RecentUpload {
-  id: string;
-  fileName: string;
-  category: string;
-  name: string;
-  date: string;
-  tags: string[];
-  status: 'uploading' | 'done';
-}
-
-const SAMPLE_UPLOADS: RecentUpload[] = [
-  { id: '1', fileName: 'Work Order RMC.pdf', category: 'Professional', name: 'Accounts', date: '12 Feb 2024', tags: ['RMC', '2024', 'work_order'], status: 'uploading' },
-  { id: '2', fileName: 'Aadhaar Card.png', category: 'Personal', name: 'Tom', date: '03 Jan 2024', tags: ['id-proof'], status: 'done' },
-];
 
 const TAG_SUGGESTIONS = ['invoice', 'contract', 'receipt', 'id-proof', 'report', 'tax'];
 const PERSONAL_NAMES = ['John', 'Tom', 'Emily', 'Priya'];
@@ -37,6 +26,24 @@ const formatSize = (bytes: number) =>
   bytes < 1024 * 1024
     ? `${Math.max(1, Math.round(bytes / 1024))} KB`
     : `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+
+const validate = (v: {
+  date: string;
+  major: string;
+  minor: string;
+  file: File | null;
+}): string | null => {
+  if (!v.date) return 'Please choose a document date.';
+  if (!v.major) return 'Please select a category.';
+  if (!v.minor) return 'Please select a name or department.';
+  if (!v.file) return 'Please choose a file to upload.';
+  const okType = v.file.type === 'application/pdf' || v.file.type.startsWith('image/');
+  if (!okType) return 'Only images and PDF files are allowed.';
+  if (v.file.size > MAX_FILE_MB * 1024 * 1024) {
+    return `File must be ${MAX_FILE_MB} MB or smaller.`;
+  }
+  return null;
+};
 
 /* ---------------------------------------------------------------------------
    TagInput: chips + suggestions
@@ -204,42 +211,6 @@ const FileDropzone = ({ file, onChange }: FileDropzoneProps) => {
 };
 
 /* ---------------------------------------------------------------------------
-   RecentUploads: list of this session's uploads (static sample)
-   --------------------------------------------------------------------------- */
-const RecentUploads = ({ uploads }: { uploads: RecentUpload[] }) => (
-  <section className="upl-recent" aria-label="Recent uploads">
-    <h3 className="upl-recent-title">This session</h3>
-    <ul className="upl-recent-list">
-      {uploads.map((u) => (
-        <li
-          key={u.id}
-          className={`upl-recent-item${u.status === 'uploading' ? ' upl-recent-item--pending' : ''}`}
-        >
-          <div className="upl-recent-info">
-            <div className="upl-file-name">{u.fileName}</div>
-            <div className="upl-muted-sm">
-              {u.category}, {u.name}, {u.date}
-            </div>
-            {u.tags.length > 0 && (
-              <div className="upl-recent-tags">
-                {u.tags.map((t) => (
-                  <span key={t} className="upl-mini-tag">
-                    {t}
-                  </span>
-                ))}
-              </div>
-            )}
-          </div>
-          <span className={`upl-status upl-status--${u.status}`}>
-            {u.status === 'uploading' ? 'Uploading' : 'Uploaded'}
-          </span>
-        </li>
-      ))}
-    </ul>
-  </section>
-);
-
-/* ---------------------------------------------------------------------------
    Page
    --------------------------------------------------------------------------- */
 const UploadForm = () => {
@@ -250,11 +221,15 @@ const UploadForm = () => {
   const [remarks, setRemarks] = useState('');
   const [file, setFile] = useState<File | null>(null);
 
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
+
   const minorOptions =
     major === 'Personal' ? PERSONAL_NAMES : major === 'Professional' ? PROFESSIONAL_DEPTS : [];
   const minorLabel = major === 'Professional' ? 'Department' : 'Name';
 
-  const reset = () => {
+  const clearFields = () => {
     setDate('');
     setMajor('');
     setMinor('');
@@ -263,10 +238,58 @@ const UploadForm = () => {
     setFile(null);
   };
 
+  const reset = () => {
+    clearFields();
+    setError(null);
+    setSuccess(null);
+  };
+
+  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setError(null);
+    setSuccess(null);
+
+    const problem = validate({ date, major, minor, file });
+    if (problem) {
+      setError(problem);
+      return;
+    }
+
+    // Adjust these two lines to wherever your login step stores them.
+    const token = localStorage.getItem('token');
+    const userId = localStorage.getItem('test_mdr');
+    console.log('Token:', token);
+    console.log('User ID:', userId);
+    if (!token || !userId) {
+      setError('You are not logged in. Please log in again.');
+      return;
+    }
+
+    setSubmitting(true);
+    try {
+      await uploadDocument({
+        file: file!,
+        majorHead: major,
+        minorHead: minor,
+        date,
+        remarks,
+        tags,
+        userId,
+        token,
+      });
+      setSuccess('Document uploaded successfully.');
+      clearFields();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Something went wrong. Please try again.');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
   return (
     <div className="upl-page">
       <div className="upl-shell">
-        <form className="upl-card" onSubmit={(e) => e.preventDefault()} noValidate>
+        <form className="upl-card" onSubmit={handleSubmit} noValidate>
           {/* Header */}
           <div className="upl-header">
             <div className="upl-logo" aria-hidden="true">
@@ -288,6 +311,7 @@ const UploadForm = () => {
               id="docDate"
               className="upl-input form-control"
               value={date}
+              disabled={submitting}
               onChange={(e) => setDate(e.target.value)}
             />
           </div>
@@ -301,6 +325,7 @@ const UploadForm = () => {
               id="majorHead"
               className="upl-input form-control"
               value={major}
+              disabled={submitting}
               onChange={(e) => {
                 setMajor(e.target.value);
                 setMinor('');
@@ -321,7 +346,7 @@ const UploadForm = () => {
               id="minorHead"
               className="upl-input form-control"
               value={minor}
-              disabled={!major}
+              disabled={!major || submitting}
               onChange={(e) => setMinor(e.target.value)}
             >
               <option value="">
@@ -341,9 +366,7 @@ const UploadForm = () => {
               Document tags
             </label>
             <TagInput id="tagInput" value={tags} onChange={setTags} suggestions={TAG_SUGGESTIONS} />
-            <div className="upl-help">
-              Pick an existing tag or type a new one.
-            </div>
+            <div className="upl-help">Pick an existing tag or type a new one.</div>
           </div>
 
           {/* 5. Remarks */}
@@ -358,6 +381,7 @@ const UploadForm = () => {
               className="upl-input form-control"
               placeholder="Anything worth knowing about this document"
               value={remarks}
+              disabled={submitting}
               onChange={(e) => setRemarks(e.target.value)}
             />
             <div className="upl-help upl-help--end">
@@ -371,18 +395,34 @@ const UploadForm = () => {
             <FileDropzone file={file} onChange={setFile} />
           </div>
 
+          {/* Messages (Bootstrap alerts, so no new CSS is needed) */}
+          {error && (
+            <div className="alert alert-danger py-2" role="alert">
+              {error}
+            </div>
+          )}
+          {success && (
+            <div className="alert alert-success py-2" role="status">
+              {success}
+            </div>
+          )}
+
           {/* Actions */}
           <div className="upl-actions">
-            <button type="button" className="btn btn-upl-outline" onClick={reset}>
+            <button
+              type="button"
+              className="btn btn-upl-outline"
+              onClick={reset}
+              disabled={submitting}
+            >
               Reset
             </button>
-            <button type="submit" className="btn btn-upl-primary">
-              Upload document
+            <button type="submit" className="btn btn-upl-primary" disabled={submitting}>
+              {submitting ? 'Uploading...' : 'Upload document'}
             </button>
           </div>
         </form>
 
-        <RecentUploads uploads={SAMPLE_UPLOADS} />
       </div>
     </div>
   );

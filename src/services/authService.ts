@@ -14,6 +14,7 @@ const TOKEN_KEY = 'token';
 
 export const getToken = () => localStorage.getItem(TOKEN_KEY);
 export const setToken = (token: string) => localStorage.setItem(TOKEN_KEY, token);
+export const setUser = (user_id: string) => localStorage.setItem(user_id, user_id )
 export const clearToken = () => localStorage.removeItem(TOKEN_KEY);
 
 // Attach the token to every outgoing request.
@@ -122,12 +123,11 @@ export const verifyOtp = async (
   );
 
   const data = unwrap(response.data);
-  console.log(data)
-
+  if (typeof data.user_id === 'string') setUser(data.user_id);
   // Save the token so the request interceptor can send it from now on
   const token = data.token ?? data.accessToken;
-  if (token) setToken(token);
 
+  if (token) setToken(token);
   return data;
 };
 

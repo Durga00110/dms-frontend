@@ -5,10 +5,11 @@ import "bootstrap/dist/css/bootstrap.min.css";
 import "./DocumentSearch.css";
 
 import { useSearchDocuments } from "../../hooks/useSearchDocuments";
+import { useTagSuggestions } from "../../hooks/useTagSuggestions";
 import type {
   DocumentItem as ApiDocumentItem,
   SearchDocumentPayload,
-} from "../../services/documentService";
+} from "../../services/documentSearchService";
 
 type FileKind = "pdf" | "image" | "other";
 
@@ -28,15 +29,6 @@ interface SearchFormProps {
   onReset: () => void;
   isPending: boolean;
 }
-
-const TAG_SUGGESTIONS = [
-  "invoice",
-  "contract",
-  "receipt",
-  "id-proof",
-  "report",
-  "tax",
-];
 
 const PERSONAL_NAMES = ["John", "Tom", "Emily", "Priya"];
 const PROFESSIONAL_DEPTS = ["Accounts", "HR", "IT", "Finance"];
@@ -107,12 +99,14 @@ interface TagInputProps {
   id: string;
   value: string[];
   onChange: (tags: string[]) => void;
-  suggestions: string[];
 }
 
-const TagInput = ({ id, value, onChange, suggestions }: TagInputProps) => {
+const TagInput = ({ id, value, onChange }: TagInputProps) => {
   const [text, setText] = useState("");
   const [focused, setFocused] = useState(false);
+
+  // Suggestions come from the API based on what the user types
+  const { data: fetched = [], isFetching } = useTagSuggestions(text, focused);
 
   const add = (raw: string) => {
     const tag = raw.trim();
@@ -137,18 +131,16 @@ const TagInput = ({ id, value, onChange, suggestions }: TagInputProps) => {
     }
   };
 
-  const shown = suggestions
-    .filter(
-      (item) =>
-        !value.some(
-          (selected) => selected.toLowerCase() === item.toLowerCase(),
-        ),
-    )
-    .filter(
-      (item) =>
-        !text.trim() || item.toLowerCase().includes(text.trim().toLowerCase()),
-    )
-    .slice(0, 6);
+  const shown = text.trim()
+    ? fetched
+        .filter(
+          (item) =>
+            !value.some(
+              (selected) => selected.toLowerCase() === item.toLowerCase(),
+            ),
+        )
+        .slice(0, 6)
+    : [];
 
   return (
     <div className="srch-tags-wrap">
@@ -185,11 +177,11 @@ const TagInput = ({ id, value, onChange, suggestions }: TagInputProps) => {
         />
       </div>
 
-      {focused && shown.length > 0 && (
+      {focused && text.trim() && (shown.length > 0 || isFetching) && (
         <div
           className="srch-suggestions"
           role="listbox"
-          aria-label="Existing tags"
+          aria-label="Matching tags"
         >
           {shown.map((item) => (
             <button
@@ -204,6 +196,10 @@ const TagInput = ({ id, value, onChange, suggestions }: TagInputProps) => {
               {item}
             </button>
           ))}
+
+          {isFetching && shown.length === 0 && (
+            <div className="srch-muted-sm px-2 py-1">Searching tags...</div>
+          )}
         </div>
       )}
     </div>
@@ -312,12 +308,7 @@ const SearchForm = ({ onSearch, onReset, isPending }: SearchFormProps) => {
             Tags
           </label>
 
-          <TagInput
-            id="srchTags"
-            value={tags}
-            onChange={setTags}
-            suggestions={TAG_SUGGESTIONS}
-          />
+          <TagInput id="srchTags" value={tags} onChange={setTags} />
         </div>
 
         <div className="srch-field">
@@ -609,6 +600,7 @@ const DocumentSearch = () => {
     setAuthError("");
     searchMutation.reset();
   };
+
   useEffect(() => {
     const token = localStorage.getItem("token");
 
@@ -651,7 +643,6 @@ const DocumentSearch = () => {
     // Run only when the component mounts.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-  
 
   return (
     <div className="srch-page">
