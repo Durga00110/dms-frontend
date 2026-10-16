@@ -1,0 +1,85 @@
+/* AppLayout.css: navigation bar shown on all protected pages */
+
+.app-layout .app-navbar {
+  background-color: #344b3c;
+  padding: 0.6rem 1rem;
+}
+
+/* Brand */
+.app-layout .app-brand {
+  display: flex;
+  align-items: center;
+  color: #ffffff;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.app-layout .app-brand:hover,
+.app-layout .app-brand:focus {
+  color: #ffffff;
+}
+
+.app-layout .app-brand-logo {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  margin-right: 10px;
+  background-color: #fffef9;
+  color: #344b3c;
+  border-radius: 10px;
+  font-size: 16px;
+  font-weight: 700;
+}
+
+/* Links */
+.app-layout .app-navbar .nav-link {
+  color: rgba(255, 255, 255, 0.75);
+  font-weight: 500;
+  border-radius: 10px;
+  padding: 0.5rem 0.9rem;
+}
+
+.app-layout .app-navbar .nav-link:hover {
+  color: #ffffff;
+  background-color: rgba(255, 255, 255, 0.08);
+}
+
+.app-layout .app-navbar .nav-link.active {
+  color: #ffffff;
+  background-color: rgba(255, 255, 255, 0.16);
+}
+
+/* Mobile toggler */
+.app-layout .app-navbar .navbar-toggler {
+  border-color: rgba(255, 255, 255, 0.4);
+}
+
+/* Logout button */
+.app-layout .btn.app-logout {
+  background-color: transparent;
+  color: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  border-radius: 10px;
+  font-weight: 600;
+  padding: 0.4rem 0.9rem;
+  margin-top: 0.5rem;
+}
+
+.app-layout .btn.app-logout:hover {
+  background-color: #ffffff;
+  color: #344b3c;
+  border-color: #ffffff;
+}
+
+@media (min-width: 768px) {
+  .app-layout .btn.app-logout {
+    margin-top: 0;
+  }
+}
+
+/* Pages that use min-vh-100 (login/create user) shouldn't push below the navbar */
+.app-layout .app-main .min-vh-100 {
+  min-height: calc(100vh - 56px) !important;
+}

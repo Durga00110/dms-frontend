@@ -25,7 +25,7 @@ const LoginPage = () => {
   const verifyOtpMutation = useMutation({
     mutationFn: verifyOtp,
      onSuccess: () => {
-      navigate('/search', { replace: true });
+      navigate('/admin', { replace: true });
     },
   });
 
@@ -33,6 +33,7 @@ const LoginPage = () => {
     e.preventDefault();
     console.log('Sending OTP to mobile number:', mobileNumber);
     sendOtpMutation.mutate({ mobile_number: mobileNumber });
+    setStart('verify');
   };
 
   const handleVerifyCode = (e: FormEvent) => {
@@ -50,6 +51,8 @@ const LoginPage = () => {
   return (
     <div className="login-page min-vh-100 d-flex align-items-center justify-content-center p-3">
       <div className="login-card p-4 p-sm-5">
+        {start === 'request' && (
+          <>
         {/* Logo */}
         <div className="login-logo d-flex align-items-center justify-content-center mb-4">
           A
@@ -83,6 +86,7 @@ const LoginPage = () => {
               autoComplete="tel"
               inputMode="numeric"
               disabled={sendOtpMutation.isPending}
+              required
             />
           </div>
 
@@ -119,9 +123,17 @@ const LoginPage = () => {
             </div>
           )}
         </form>
+        </>
+        )}
 
         {/* Step 2: Verification code */}
-        {otpSent && (
+        {start === 'verify' && (
+          <>
+          <p className="login-subtitle mb-4">
+          {otpSent
+            ? `Enter the code we sent to ${mobileNumber}.`
+            : "Enter your mobile number and we'll send you a one-time code."}
+        </p>
           <form onSubmit={handleVerifyCode} className="mt-4" noValidate>
             <div className="mb-3">
               <label
@@ -141,6 +153,7 @@ const LoginPage = () => {
                 autoComplete="one-time-code"
                 inputMode="numeric"
                 disabled={verifyOtpMutation.isPending}
+                required
               />
             </div>
 
@@ -176,7 +189,15 @@ const LoginPage = () => {
                 Verified successfully.
               </div>
             )}
+            <button
+              type="button"
+              className="btn secondary btn-link btn-sm mt-3"
+              onClick={() => setStart('request')}
+            >
+              Edit mobile number
+            </button>
           </form>
+          </>
         )}
 
         {/* Footer */}

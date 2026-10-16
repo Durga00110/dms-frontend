@@ -1,0 +1,458 @@
+/* UploadForm.css
+   Same green theme as the login / admin / search pages. Colours are explicit
+   so it works on Bootstrap 4 and 5 and beats global Vite/CRA styles. */
+
+.upl-page {
+  min-height: calc(100vh - 56px); /* leaves room for the navbar */
+  background-color: #f5f4ef;
+  color: #1c1b18;
+  color-scheme: light;
+  padding: 2rem 1rem;
+}
+
+.upl-page .upl-shell {
+  max-width: 720px;
+  margin: 0 auto;
+}
+
+/* ---------- Card ---------- */
+.upl-page .upl-card {
+  background-color: #fffef9;
+  border: 1px solid #e6e4dc;
+  border-radius: 24px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.06);
+  padding: 2rem;
+}
+
+.upl-page .upl-header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1.75rem;
+}
+
+.upl-page .upl-logo {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 56px;
+  height: 56px;
+  background-color: #344b3c;
+  color: #ffffff;
+  border-radius: 16px;
+  font-size: 24px;
+  font-weight: 700;
+}
+
+.upl-page .upl-title {
+  margin: 0;
+  color: #1c1b18;
+  font-size: 1.6rem;
+  font-weight: 700;
+}
+
+.upl-page .upl-subtitle {
+  margin: 0.15rem 0 0;
+  color: #7a7870;
+}
+
+.upl-page .upl-muted-sm,
+.upl-page .upl-help {
+  color: #7a7870;
+  font-size: 0.85rem;
+}
+
+.upl-page .upl-help {
+  margin-top: 0.35rem;
+}
+
+.upl-page .upl-help--end {
+  text-align: right;
+}
+
+/* ---------- Fields ---------- */
+.upl-page .upl-field {
+  position: relative;
+  margin-bottom: 1.4rem;
+}
+
+.upl-page .upl-label {
+  display: block;
+  color: #4a4943;
+  font-weight: 500;
+  margin-bottom: 0.4rem;
+}
+
+.upl-page .form-control.upl-input {
+  background-color: #ffffff;
+  color: #1c1b18;
+  border: 1px solid #e0ded6;
+  border-radius: 14px;
+  height: auto;
+  padding: 0.8rem 1rem;
+  font-size: 1.05rem;
+  box-shadow: none;
+}
+
+.upl-page .form-control.upl-input::placeholder {
+  color: #8c8a82;
+  opacity: 1;
+}
+
+.upl-page .form-control.upl-input:focus {
+  background-color: #ffffff;
+  color: #1c1b18;
+  border-color: #344b3c;
+  box-shadow: 0 0 0 0.2rem rgba(52, 75, 60, 0.2);
+  outline: 0;
+}
+
+.upl-page .form-control.upl-input:disabled {
+  background-color: #f3f2ec;
+  color: #7a7870;
+}
+
+.upl-page textarea.form-control.upl-input {
+  resize: vertical;
+}
+
+/* ---------- Tag input ---------- */
+.upl-page .upl-tags-wrap {
+  position: relative;
+}
+
+.upl-page .upl-tags {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem;
+  min-height: 54px;
+  padding: 0.45rem 0.7rem;
+  background-color: #ffffff;
+  border: 1px solid #e0ded6;
+  border-radius: 14px;
+}
+
+.upl-page .upl-tags--focus {
+  border-color: #344b3c;
+  box-shadow: 0 0 0 0.2rem rgba(52, 75, 60, 0.2);
+}
+
+.upl-page .upl-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  background-color: #e8eee9;
+  color: #344b3c;
+  border-radius: 999px;
+  padding: 0.2rem 0.4rem 0.2rem 0.75rem;
+  font-size: 0.95rem;
+  font-weight: 500;
+}
+
+.upl-page .upl-chip-x {
+  width: 20px;
+  height: 20px;
+  line-height: 18px;
+  padding: 0;
+  background: transparent;
+  color: #344b3c;
+  border: 0;
+  border-radius: 50%;
+  font-size: 1.1rem;
+  cursor: pointer;
+}
+
+.upl-page .upl-chip-x:hover {
+  background-color: rgba(52, 75, 60, 0.15);
+}
+
+.upl-page .upl-tag-input {
+  flex: 1 1 140px;
+  min-width: 120px;
+  background: transparent;
+  color: #1c1b18;
+  border: 0;
+  outline: 0;
+  padding: 0.25rem;
+  font-size: 1.05rem;
+}
+
+.upl-page .upl-tag-input::placeholder {
+  color: #8c8a82;
+}
+
+.upl-page .upl-suggestions {
+  position: absolute;
+  z-index: 10;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  background-color: #ffffff;
+  border: 1px solid #e6e4dc;
+  border-radius: 14px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+  padding: 0.4rem;
+}
+
+.upl-page .upl-suggestion {
+  display: block;
+  width: 100%;
+  text-align: left;
+  background: transparent;
+  color: #1c1b18;
+  border: 0;
+  border-radius: 10px;
+  padding: 0.5rem 0.7rem;
+  cursor: pointer;
+}
+
+.upl-page .upl-suggestion:hover {
+  background-color: #f1f4f2;
+  color: #344b3c;
+}
+
+/* ---------- File dropzone ---------- */
+.upl-page .upl-file-input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.upl-page .upl-dropzone {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  margin: 0;
+  padding: 2rem 1rem;
+  background-color: #faf9f3;
+  border: 2px dashed #c9c7bd;
+  border-radius: 16px;
+  text-align: center;
+  cursor: pointer;
+  transition: background-color 0.15s, border-color 0.15s;
+}
+
+.upl-page .upl-dropzone:hover,
+.upl-page .upl-dropzone--active {
+  background-color: #eef3ef;
+  border-color: #344b3c;
+}
+
+.upl-page .upl-dropzone-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  background-color: #344b3c;
+  color: #ffffff;
+  border-radius: 50%;
+  font-size: 1.3rem;
+  font-weight: 700;
+}
+
+.upl-page .upl-dropzone-title {
+  color: #1c1b18;
+  font-weight: 600;
+}
+
+.upl-page .upl-file-card {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+  padding: 0.85rem 1rem;
+  background-color: #ffffff;
+  border: 1px solid #e0ded6;
+  border-radius: 16px;
+}
+
+.upl-page .upl-file-badge {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  background-color: #e0ecf7;
+  color: #2a5d8f;
+  border-radius: 12px;
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+.upl-page .upl-file-badge--pdf {
+  background-color: #fbe4e1;
+  color: #b3372f;
+}
+
+.upl-page .upl-file-meta {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.upl-page .upl-file-name {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  font-weight: 600;
+  color: #1c1b18;
+}
+
+/* ---------- Buttons ---------- */
+.upl-page .upl-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  margin-top: 0.5rem;
+}
+
+.upl-page .btn.btn-upl-primary {
+  background-color: #344b3c;
+  border: 1px solid #344b3c;
+  color: #ffffff;
+  border-radius: 14px;
+  font-size: 1.05rem;
+  font-weight: 600;
+  padding: 0.75rem 1.8rem;
+}
+
+.upl-page .btn.btn-upl-primary:hover,
+.upl-page .btn.btn-upl-primary:focus {
+  background-color: #2a3d31;
+  border-color: #2a3d31;
+  color: #ffffff;
+  box-shadow: 0 0 0 0.2rem rgba(52, 75, 60, 0.3);
+  outline: 0;
+}
+
+.upl-page .btn.btn-upl-primary:active {
+  background-color: #213027;
+  border-color: #213027;
+}
+
+.upl-page .btn.btn-upl-outline {
+  background-color: transparent;
+  border: 1px solid #c9c7bd;
+  color: #4a4943;
+  border-radius: 14px;
+  font-size: 1.05rem;
+  font-weight: 600;
+  padding: 0.75rem 1.5rem;
+}
+
+.upl-page .btn.btn-upl-outline:hover,
+.upl-page .btn.btn-upl-outline:focus {
+  background-color: #f1f0ea;
+  border-color: #344b3c;
+  color: #344b3c;
+  box-shadow: none;
+}
+
+.upl-page .btn.btn-sm {
+  border-radius: 12px;
+  font-size: 0.875rem;
+  padding: 0.35rem 0.9rem;
+}
+
+/* ---------- Recent uploads ---------- */
+.upl-page .upl-recent {
+  margin-top: 1.5rem;
+  background-color: #fffef9;
+  border: 1px solid #e6e4dc;
+  border-radius: 20px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.06);
+  padding: 1.25rem 1.5rem;
+}
+
+.upl-page .upl-recent-title {
+  margin: 0 0 0.9rem;
+  color: #1c1b18;
+  font-size: 1.05rem;
+  font-weight: 700;
+}
+
+.upl-page .upl-recent-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.upl-page .upl-recent-item {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.8rem 0;
+  border-top: 1px solid #eeece4;
+}
+
+.upl-page .upl-recent-item:first-child {
+  border-top: 0;
+  padding-top: 0;
+}
+
+.upl-page .upl-recent-item--pending {
+  opacity: 0.75;
+}
+
+.upl-page .upl-recent-info {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.upl-page .upl-recent-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+  margin-top: 0.4rem;
+}
+
+.upl-page .upl-mini-tag {
+  background-color: #e8eee9;
+  color: #344b3c;
+  border-radius: 999px;
+  padding: 0.1rem 0.6rem;
+  font-size: 0.8rem;
+  font-weight: 500;
+}
+
+.upl-page .upl-status {
+  flex: 0 0 auto;
+  border-radius: 999px;
+  padding: 0.2rem 0.7rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.upl-page .upl-status--uploading {
+  background-color: #fdf1d6;
+  color: #8a5d00;
+}
+
+.upl-page .upl-status--done {
+  background-color: #e0efe3;
+  color: #2c6a3a;
+}
+
+/* ---------- Responsive ---------- */
+@media (max-width: 575.98px) {
+  .upl-page {
+    padding: 1.25rem 0.75rem;
+  }
+
+  .upl-page .upl-card {
+    padding: 1.25rem;
+    border-radius: 20px;
+  }
+
+  .upl-page .upl-actions {
+    flex-direction: column-reverse;
+  }
+}

@@ -1,0 +1,150 @@
+/* CreateUser.css
+   Same look as the login page. Colours are set explicitly so it works on
+   Bootstrap 4 and 5 and beats global Vite/CRA styles. */
+
+.admin-page {
+  background-color: #f5f4ef;
+  color: #1c1b18;
+  color-scheme: light;
+}
+
+/* Card */
+.admin-page .admin-card {
+  max-width: 440px;
+  width: 100%;
+  background-color: #fffef9;
+  color: #1c1b18;
+  border: 1px solid #e6e4dc;
+  border-radius: 24px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.06);
+}
+
+/* Logo */
+.admin-page .admin-logo {
+  width: 56px;
+  height: 56px;
+  background-color: #344b3c;
+  color: #ffffff;
+  border-radius: 16px;
+  font-size: 24px;
+  font-weight: 700;
+}
+
+/* Text */
+.admin-page .admin-title {
+  color: #1c1b18;
+  font-size: 2rem;
+  font-weight: 700;
+}
+
+.admin-page .admin-subtitle {
+  color: #7a7870;
+  font-size: 1.25rem;
+}
+
+.admin-page .admin-label {
+  color: #4a4943;
+  font-weight: 500;
+}
+
+.admin-page .admin-footer {
+  color: #7a7870;
+}
+
+/* Inputs */
+.admin-page .form-control.admin-input {
+  background-color: #ffffff;
+  color: #1c1b18;
+  border: 1px solid #e0ded6;
+  border-radius: 14px;
+  font-size: 18px;
+  box-shadow: none;
+}
+
+.admin-page .form-control.admin-input::placeholder {
+  color: #8c8a82;
+  opacity: 1;
+}
+
+.admin-page .form-control.admin-input:focus {
+  background-color: #ffffff;
+  color: #1c1b18;
+  border-color: #344b3c;
+  box-shadow: 0 0 0 0.2rem rgba(52, 75, 60, 0.2);
+  outline: 0;
+}
+
+/* Password field with Show/Hide toggle */
+.admin-page .admin-password-wrap {
+  position: relative;
+}
+
+.admin-page .admin-password-wrap .form-control.admin-input {
+  padding-right: 80px;
+}
+
+.admin-page .btn.btn-link.admin-toggle {
+  position: absolute;
+  top: 50%;
+  right: 12px;
+  transform: translateY(-50%);
+  padding: 4px 8px;
+  color: #344b3c;
+  font-size: 15px;
+  font-weight: 600;
+  text-decoration: none;
+  background: transparent;
+  border: 0;
+  box-shadow: none;
+}
+
+.admin-page .btn.btn-link.admin-toggle:hover {
+  color: #213027;
+  text-decoration: underline;
+}
+
+/* Button */
+.admin-page .btn.btn-admin {
+  background-color: #344b3c;
+  border: 1px solid #344b3c;
+  color: #ffffff;
+  border-radius: 14px;
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.admin-page .btn.btn-admin:hover {
+  background-color: #2a3d31;
+  border-color: #2a3d31;
+  color: #ffffff;
+}
+
+.admin-page .btn.btn-admin:focus,
+.admin-page .btn.btn-admin:focus-visible {
+  background-color: #2a3d31;
+  border-color: #2a3d31;
+  color: #ffffff;
+  box-shadow: 0 0 0 0.2rem rgba(52, 75, 60, 0.35);
+  outline: 0;
+}
+
+.admin-page .btn.btn-admin:active {
+  background-color: #213027;
+  border-color: #213027;
+  color: #ffffff;
+}
+
+.admin-page .btn.btn-admin:disabled,
+.admin-page .btn.btn-admin.disabled {
+  background-color: #344b3c;
+  border-color: #344b3c;
+  color: #ffffff;
+  opacity: 0.65;
+}
+
+/* Small screens */
+@media (max-width: 575.98px) {
+  .admin-page .admin-card {
+    border-radius: 20px;
+  }
+}
