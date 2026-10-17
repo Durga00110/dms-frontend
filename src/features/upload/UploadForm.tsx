@@ -1,28 +1,34 @@
 import { useRef, useState } from 'react';
 import type { ChangeEvent, DragEvent, FormEvent, KeyboardEvent } from 'react';
 import './UploadForm.css';
-import type {
-  TagInputProps,
-  FileDropzoneProps,
-  UploadFormValues,
-} from '../../types/uploadForm.types';
+import type { TagInputProps, FileDropzoneProps } from '../../types/uploadForm.types';
 import { FiFileText } from 'react-icons/fi';
 
 // Adjust the path to wherever you saved the service.
 import { uploadDocument } from '../../services/documentUploadService';
+import {
+  FIELD_IDS,
+  FIELD_ORDER,
+  MAX_FILE_MB,
+  MAX_REMARKS,
+  validateUploadField,
+  validateUploadForm,
+} from '../../validations/UploadForm.validation';
+import type {
+  FieldErrors,
+  FieldName,
+  UploadFormValues as FormValues,
+} from '../../validations/UploadForm.validation';
 
 /* ---------------------------------------------------------------------------
    Sample data stands in for real options and recent uploads until those
    endpoints are wired up.
    --------------------------------------------------------------------------- */
 
-
 const TAG_SUGGESTIONS = ['invoice', 'contract', 'receipt', 'id-proof', 'report', 'tax'];
 const PERSONAL_NAMES = ['John', 'Tom', 'Emily', 'Priya'];
 const PROFESSIONAL_DEPTS = ['Accounts', 'HR', 'IT', 'Finance'];
 
-const MAX_REMARKS = 500;
-const MAX_FILE_MB = 10;
 const ACCEPT = 'image/*,application/pdf';
 
 const formatSize = (bytes: number) =>
@@ -30,23 +36,14 @@ const formatSize = (bytes: number) =>
     ? `${Math.max(1, Math.round(bytes / 1024))} KB`
     : `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 
-const validate = (v: UploadFormValues): string | null => {
-  if (!v.date) return 'Please choose a document date.';
-  if (!v.major) return 'Please select a category.';
-  if (!v.minor) return 'Please select a name or department.';
-  if (!v.file) return 'Please choose a file to upload.';
+type Touched = Partial<Record<FieldName, boolean>>;
 
-  const okType =
-    v.file.type === 'application/pdf' || v.file.type.startsWith('image/');
-
-  if (!okType) return 'Only images and PDF files are allowed.';
-
-  if (v.file.size > MAX_FILE_MB * 1024 * 1024) {
-    return `File must be ${MAX_FILE_MB} MB or smaller.`;
-  }
-
-  return null;
-};
+const FieldError = ({ id, message }: { id: string; message?: string }) =>
+  message ? (
+    <div id={id} className="invalid-feedback d-block" role="alert">
+      {message}
+    </div>
+  ) : null;
 
 /* ---------------------------------------------------------------------------
    TagInput: chips + suggestions
@@ -134,7 +131,6 @@ const TagInput = ({ id, value, onChange, suggestions }: TagInputProps) => {
    FileDropzone: drop or browse, then shows the chosen file
    --------------------------------------------------------------------------- */
 
-
 const FileDropzone = ({ file, onChange }: FileDropzoneProps) => {
   const inputRef = useRef<HTMLInputElement | null>(null);
   const [dragging, setDragging] = useState(false);
@@ -215,13 +211,76 @@ const UploadForm = () => {
   const [remarks, setRemarks] = useState('');
   const [file, setFile] = useState<File | null>(null);
 
+  const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
+  const [touched, setTouched] = useState<Touched>({});
+
   const [submitting, setSubmitting] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null); // server / auth errors only
   const [success, setSuccess] = useState<string | null>(null);
+
+  const values: FormValues = { date, major, minor, tags, remarks, file };
 
   const minorOptions =
     major === 'Personal' ? PERSONAL_NAMES : major === 'Professional' ? PROFESSIONAL_DEPTS : [];
   const minorLabel = major === 'Professional' ? 'Department' : 'Name';
+
+  /* ---- validation helpers ------------------------------------------------ */
+
+  const setFieldError = (name: FieldName, message?: string) =>
+    setFieldErrors((prev) => ({ ...prev, [name]: message }));
+
+  // Validate a single field against the given (latest) values.
+  const validateField = async (name: FieldName, next: FormValues) => {
+    setFieldError(name, await validateUploadField(name, next));
+  };
+
+  // Update a field. Re-validate right away only once the user has already
+  // interacted with it, so people aren't shown errors while still typing.
+  const change = <K extends FieldName>(name: K, value: FormValues[K], extra?: Partial<FormValues>) => {
+    const next = { ...values, ...extra, [name]: value } as FormValues;
+    if (touched[name] || fieldErrors[name]) {
+      void validateField(name, next);
+    }
+  };
+
+  const blur = (name: FieldName) => {
+    setTouched((prev) => ({ ...prev, [name]: true }));
+    void validateField(name, values);
+  };
+
+  /* ---- field handlers ---------------------------------------------------- */
+
+  const handleDate = (v: string) => {
+    setDate(v);
+    change('date', v);
+  };
+
+  const handleMajor = (v: string) => {
+    setMajor(v);
+    setMinor('');
+    // The "minor" field depends on "major", so reset its error as well.
+    setFieldError('minor', undefined);
+    setTouched((prev) => ({ ...prev, minor: false }));
+    change('major', v, { minor: '' });
+  };
+
+  const handleMinor = (v: string) => {
+    setMinor(v);
+    change('minor', v);
+  };
+
+  const handleRemarks = (v: string) => {
+    setRemarks(v);
+    change('remarks', v);
+  };
+
+  const handleFile = (f: File | null) => {
+    setFile(f);
+    setTouched((prev) => ({ ...prev, file: true }));
+    void validateField('file', { ...values, file: f });
+  };
+
+  /* ---- reset ------------------------------------------------------------- */
 
   const clearFields = () => {
     setDate('');
@@ -230,6 +289,8 @@ const UploadForm = () => {
     setTags([]);
     setRemarks('');
     setFile(null);
+    setFieldErrors({});
+    setTouched({});
   };
 
   const reset = () => {
@@ -238,14 +299,20 @@ const UploadForm = () => {
     setSuccess(null);
   };
 
+  /* ---- submit ------------------------------------------------------------ */
+
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setError(null);
     setSuccess(null);
 
-    const problem = validate({ date, major, minor, file });
-    if (problem) {
-      setError(problem);
+    const errors = await validateUploadForm(values);
+    setFieldErrors(errors);
+    setTouched({ date: true, major: true, minor: true, tags: true, remarks: true, file: true });
+
+    const firstInvalid = FIELD_ORDER.find((name) => errors[name]);
+    if (firstInvalid) {
+      document.getElementById(FIELD_IDS[firstInvalid])?.focus();
       return;
     }
 
@@ -278,6 +345,10 @@ const UploadForm = () => {
     }
   };
 
+  const invalid = (name: FieldName) => (fieldErrors[name] ? ' is-invalid' : '');
+  const describedBy = (name: FieldName) =>
+    fieldErrors[name] ? `${FIELD_IDS[name]}-error` : undefined;
+
   return (
     <div className="upl-page">
       <div className="upl-shell">
@@ -285,8 +356,8 @@ const UploadForm = () => {
           {/* Header */}
           <div className="upl-header">
             <div className="upl-logo" aria-hidden="true">
-  <FiFileText />
-</div>
+              <FiFileText />
+            </div>
             <div>
               <h1 className="upl-title">Upload a document</h1>
               <p className="upl-subtitle">Add the details, then choose an image or PDF.</p>
@@ -301,11 +372,15 @@ const UploadForm = () => {
             <input
               type="date"
               id="docDate"
-              className="upl-input form-control"
+              className={`upl-input form-control${invalid('date')}`}
               value={date}
               disabled={submitting}
-              onChange={(e) => setDate(e.target.value)}
+              aria-invalid={!!fieldErrors.date}
+              aria-describedby={describedBy('date')}
+              onChange={(e) => handleDate(e.target.value)}
+              onBlur={() => blur('date')}
             />
+            <FieldError id="docDate-error" message={fieldErrors.date} />
           </div>
 
           {/* 2. Category */}
@@ -315,18 +390,19 @@ const UploadForm = () => {
             </label>
             <select
               id="majorHead"
-              className="upl-input form-control"
+              className={`upl-input form-control${invalid('major')}`}
               value={major}
               disabled={submitting}
-              onChange={(e) => {
-                setMajor(e.target.value);
-                setMinor('');
-              }}
+              aria-invalid={!!fieldErrors.major}
+              aria-describedby={describedBy('major')}
+              onChange={(e) => handleMajor(e.target.value)}
+              onBlur={() => blur('major')}
             >
               <option value="">Select a category</option>
               <option value="Personal">Personal</option>
               <option value="Professional">Professional</option>
             </select>
+            <FieldError id="majorHead-error" message={fieldErrors.major} />
           </div>
 
           {/* 3. Name / department */}
@@ -336,10 +412,13 @@ const UploadForm = () => {
             </label>
             <select
               id="minorHead"
-              className="upl-input form-control"
+              className={`upl-input form-control${invalid('minor')}`}
               value={minor}
               disabled={!major || submitting}
-              onChange={(e) => setMinor(e.target.value)}
+              aria-invalid={!!fieldErrors.minor}
+              aria-describedby={describedBy('minor')}
+              onChange={(e) => handleMinor(e.target.value)}
+              onBlur={() => blur('minor')}
             >
               <option value="">
                 {major ? `Select a ${minorLabel.toLowerCase()}` : 'Select a category first'}
@@ -350,6 +429,7 @@ const UploadForm = () => {
                 </option>
               ))}
             </select>
+            <FieldError id="minorHead-error" message={fieldErrors.minor} />
           </div>
 
           {/* 4. Tags */}
@@ -359,6 +439,7 @@ const UploadForm = () => {
             </label>
             <TagInput id="tagInput" value={tags} onChange={setTags} suggestions={TAG_SUGGESTIONS} />
             <div className="upl-help">Pick an existing tag or type a new one.</div>
+            <FieldError id="tagInput-error" message={fieldErrors.tags} />
           </div>
 
           {/* 5. Remarks */}
@@ -369,25 +450,35 @@ const UploadForm = () => {
             <textarea
               id="remarks"
               rows={3}
-              maxLength={MAX_REMARKS}
-              className="upl-input form-control"
+              className={`upl-input form-control${invalid('remarks')}`}
               placeholder="Anything worth knowing about this document"
               value={remarks}
               disabled={submitting}
-              onChange={(e) => setRemarks(e.target.value)}
+              aria-invalid={!!fieldErrors.remarks}
+              aria-describedby={describedBy('remarks')}
+              onChange={(e) => handleRemarks(e.target.value)}
+              onBlur={() => blur('remarks')}
             />
-            <div className="upl-help upl-help--end">
-              {remarks.length}/{MAX_REMARKS}
+            <div className="d-flex justify-content-between">
+              <div>
+                <FieldError id="remarks-error" message={fieldErrors.remarks} />
+              </div>
+              <div
+                className={`upl-help upl-help--end${remarks.length > MAX_REMARKS ? ' text-danger' : ''}`}
+              >
+                {remarks.length}/{MAX_REMARKS}
+              </div>
             </div>
           </div>
 
           {/* 6. File */}
           <div className="upl-field">
             <span className="upl-label form-label">Image or PDF file</span>
-            <FileDropzone file={file} onChange={setFile} />
+            <FileDropzone file={file} onChange={handleFile} />
+            <FieldError id="docFile-error" message={fieldErrors.file} />
           </div>
 
-          {/* Messages (Bootstrap alerts, so no new CSS is needed) */}
+          {/* Server / auth messages (Bootstrap alerts, so no new CSS is needed) */}
           {error && (
             <div className="alert alert-danger py-2" role="alert">
               {error}
@@ -414,7 +505,6 @@ const UploadForm = () => {
             </button>
           </div>
         </form>
-
       </div>
     </div>
   );
