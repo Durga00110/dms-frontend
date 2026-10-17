@@ -323,7 +323,7 @@ const handleDownload = async (url: string, fileName: string) => {
   }
 };
 
-const ResultsList = ({ docs, total, onPreview }: ResultsListProps) => (
+const ResultsList = ({ docs, onPreview }: ResultsListProps) => (
   <div className="srch-table" role="table" aria-label="Search results">
     <div className="srch-grid srch-head" role="row">
       <div role="columnheader">Document</div>
@@ -513,12 +513,6 @@ const DocumentSearch = () => {
 
     setAuthError("");
     setCurrentPage(page);
-
-    console.log("Searching documents:", {
-      start: requestPayload.start,
-      length: requestPayload.length,
-      page,
-    });
 
     searchMutation.mutate(
       { payload: requestPayload, token },
