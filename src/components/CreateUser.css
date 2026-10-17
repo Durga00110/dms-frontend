@@ -1,150 +1,271 @@
-/* CreateUser.css
-   Same look as the login page. Colours are set explicitly so it works on
-   Bootstrap 4 and 5 and beats global Vite/CRA styles. */
+
 
 .admin-page {
-  background-color: #f5f4ef;
-  color: #1c1b18;
+  position: relative;
+  isolation: isolate;
+  min-height: 100vh;
+  padding: 2rem 1rem !important;
+  overflow: hidden;
+  background:
+    radial-gradient(
+      circle at 12% 15%,
+      rgba(42, 111, 78, 0.10),
+      transparent 32%
+    ),
+    radial-gradient(
+      circle at 88% 85%,
+      rgba(190, 213, 176, 0.24),
+      transparent 34%
+    ),
+    #f5f4ef;
+  color: #1c2c23;
   color-scheme: light;
 }
 
-/* Card */
-.admin-page .admin-card {
-  max-width: 440px;
+.admin-card {
+  position: relative;
+  z-index: 1;
   width: 100%;
-  background-color: #fffef9;
-  color: #1c1b18;
-  border: 1px solid #e6e4dc;
+  max-width: 470px;
+  padding: 2.5rem !important;
+  overflow: hidden;
+  border: 1px solid rgba(39, 82, 59, 0.12);
   border-radius: 24px;
-  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.06);
+  background: #fffefa;
+  box-shadow:
+    0 24px 70px rgba(29, 57, 40, 0.10),
+    0 4px 14px rgba(29, 57, 40, 0.04);
+  animation: admin-card-enter 0.45s ease-out both;
 }
 
-/* Logo */
-.admin-page .admin-logo {
-  width: 56px;
-  height: 56px;
-  background-color: #344b3c;
-  color: #ffffff;
-  border-radius: 16px;
-  font-size: 24px;
-  font-weight: 700;
+/* Decorative top accent */
+.admin-card::before {
+  position: absolute;
+  top: 0;
+  right: 0;
+  left: 0;
+  height: 5px;
+  background: linear-gradient(90deg, #174b35, #3d8059, #a6c69a);
+  content: "";
 }
 
-/* Text */
-.admin-page .admin-title {
-  color: #1c1b18;
-  font-size: 2rem;
-  font-weight: 700;
+.admin-title {
+  margin-top: 0.35rem;
+  color: #183d2b;
+  font-size: clamp(1.8rem, 5vw, 2.2rem);
+  font-weight: 750;
+  letter-spacing: -0.055em;
+  line-height: 1.2;
 }
 
-.admin-page .admin-subtitle {
-  color: #7a7870;
-  font-size: 1.25rem;
+.admin-subtitle {
+  max-width: 360px;
+  color: #718075;
+  font-size: 0.95rem;
+  line-height: 1.7;
 }
 
-.admin-page .admin-label {
-  color: #4a4943;
-  font-weight: 500;
-}
-
-.admin-page .admin-footer {
-  color: #7a7870;
+/* Labels */
+.admin-label {
+  display: block;
+  margin-bottom: 0.55rem;
+  color: #34483a;
+  font-size: 0.88rem;
+  font-weight: 650;
 }
 
 /* Inputs */
-.admin-page .form-control.admin-input {
-  background-color: #ffffff;
-  color: #1c1b18;
-  border: 1px solid #e0ded6;
-  border-radius: 14px;
-  font-size: 18px;
+.admin-input.form-control {
+  min-height: 56px;
+  padding: 0.9rem 1rem !important;
+  border: 1px solid #dce4dc;
+  border-radius: 12px;
+  background-color: #fbfcf9;
+  color: #20372a;
+  font-size: 0.96rem;
   box-shadow: none;
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease,
+    background-color 0.2s ease;
 }
 
-.admin-page .form-control.admin-input::placeholder {
-  color: #8c8a82;
+.admin-input.form-control::placeholder {
+  color: #a0aaa0;
   opacity: 1;
 }
 
-.admin-page .form-control.admin-input:focus {
-  background-color: #ffffff;
-  color: #1c1b18;
-  border-color: #344b3c;
-  box-shadow: 0 0 0 0.2rem rgba(52, 75, 60, 0.2);
-  outline: 0;
+.admin-input.form-control:hover {
+  border-color: #b8cbb9;
 }
 
-/* Password field with Show/Hide toggle */
-.admin-page .admin-password-wrap {
+.admin-input.form-control:focus {
+  border-color: #347653;
+  background-color: #fff;
+  box-shadow: 0 0 0 4px rgba(52, 118, 83, 0.12);
+  outline: none;
+}
+
+.admin-input.form-control[aria-invalid="true"] {
+  border-color: #d95c5c;
+  background-color: #fffafa;
+}
+
+.admin-input.form-control[aria-invalid="true"]:focus {
+  box-shadow: 0 0 0 4px rgba(217, 92, 92, 0.11);
+}
+
+/* Password input and visibility toggle */
+.admin-password-wrap {
   position: relative;
 }
 
-.admin-page .admin-password-wrap .form-control.admin-input {
-  padding-right: 80px;
+.admin-password-wrap .admin-input {
+  padding-right: 5rem !important;
 }
 
-.admin-page .btn.btn-link.admin-toggle {
+.admin-toggle.btn {
   position: absolute;
   top: 50%;
-  right: 12px;
+  right: 0.65rem;
   transform: translateY(-50%);
-  padding: 4px 8px;
-  color: #344b3c;
-  font-size: 15px;
-  font-weight: 600;
-  text-decoration: none;
-  background: transparent;
+  padding: 0.4rem 0.55rem;
   border: 0;
+  border-radius: 7px;
+  color: #347653;
+  font-size: 0.85rem;
+  font-weight: 700;
+  text-decoration: none;
   box-shadow: none;
 }
 
-.admin-page .btn.btn-link.admin-toggle:hover {
-  color: #213027;
-  text-decoration: underline;
+.admin-toggle.btn:hover {
+  background: #edf4ed;
+  color: #174b35;
 }
 
-/* Button */
-.admin-page .btn.btn-admin {
-  background-color: #344b3c;
-  border: 1px solid #344b3c;
-  color: #ffffff;
-  border-radius: 14px;
-  font-size: 18px;
-  font-weight: 600;
+.admin-toggle.btn:focus-visible {
+  outline: 2px solid #347653;
+  outline-offset: 2px;
 }
 
-.admin-page .btn.btn-admin:hover {
-  background-color: #2a3d31;
-  border-color: #2a3d31;
-  color: #ffffff;
+/* Create user button */
+.btn-admin.btn {
+  min-height: 56px;
+  border: 1px solid #174b35;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #20583c, #17452f);
+  color: #fff;
+  font-size: 0.98rem;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  box-shadow: 0 6px 16px rgba(23, 75, 53, 0.16);
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease,
+    background 0.2s ease;
 }
 
-.admin-page .btn.btn-admin:focus,
-.admin-page .btn.btn-admin:focus-visible {
-  background-color: #2a3d31;
-  border-color: #2a3d31;
-  color: #ffffff;
-  box-shadow: 0 0 0 0.2rem rgba(52, 75, 60, 0.35);
-  outline: 0;
+.btn-admin.btn:hover {
+  transform: translateY(-1px);
+  border-color: #123d29;
+  background: linear-gradient(135deg, #174b35, #103b27);
+  color: #fff;
+  box-shadow: 0 9px 22px rgba(23, 75, 53, 0.22);
 }
 
-.admin-page .btn.btn-admin:active {
-  background-color: #213027;
-  border-color: #213027;
-  color: #ffffff;
+.btn-admin.btn:active {
+  transform: translateY(0);
+  box-shadow: 0 3px 8px rgba(23, 75, 53, 0.15);
 }
 
-.admin-page .btn.btn-admin:disabled,
-.admin-page .btn.btn-admin.disabled {
-  background-color: #344b3c;
-  border-color: #344b3c;
-  color: #ffffff;
-  opacity: 0.65;
+.btn-admin.btn:focus-visible {
+  outline: 3px solid rgba(52, 118, 83, 0.35);
+  outline-offset: 3px;
 }
 
-/* Small screens */
+/* Validation messages */
+.admin-card .text-danger[role="alert"] {
+  color: #bd3f3f !important;
+  font-size: 0.82rem;
+  line-height: 1.5;
+}
+
+/* Success message */
+.admin-card .alert-success {
+  border: 1px solid #c6e4ce;
+  border-radius: 11px;
+  background-color: #eff8f0;
+  color: #245c37;
+  font-size: 0.88rem;
+  line-height: 1.5;
+}
+
+/* Footer */
+.admin-footer {
+  color: #849087;
+  font-size: 0.8rem !important;
+  letter-spacing: 0.025em;
+}
+
+/* Keyboard accessibility */
+.admin-card input:focus-visible {
+  outline-offset: 2px;
+}
+
+/* Responsive layout */
 @media (max-width: 575.98px) {
-  .admin-page .admin-card {
-    border-radius: 20px;
+  .admin-page {
+    padding: 1rem !important;
+  }
+
+  .admin-card {
+    max-width: 100%;
+    padding: 1.75rem !important;
+    border-radius: 19px;
+  }
+
+  .admin-title {
+    font-size: 1.85rem;
+  }
+
+  .admin-subtitle {
+    font-size: 0.9rem;
+  }
+
+  .admin-input.form-control,
+  .btn-admin.btn {
+    min-height: 53px;
+  }
+}
+
+@media (max-width: 359px) {
+  .admin-card {
+    padding: 1.25rem !important;
+  }
+}
+
+/* Respect reduced-motion preferences */
+@keyframes admin-card-enter {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .admin-card {
+    animation: none;
+  }
+
+  .admin-input.form-control,
+  .admin-toggle.btn,
+  .btn-admin.btn {
+    transition: none;
   }
 }

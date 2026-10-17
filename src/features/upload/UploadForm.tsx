@@ -1,14 +1,12 @@
 import { useRef, useState } from 'react';
 import type { ChangeEvent, DragEvent, FormEvent, KeyboardEvent } from 'react';
-
-// Bootstrap must load BEFORE our own CSS so our overrides win.
-import 'bootstrap/dist/css/bootstrap.min.css';
 import './UploadForm.css';
 import type {
   TagInputProps,
   FileDropzoneProps,
   UploadFormValues,
 } from '../../types/uploadForm.types';
+import { FiFileText } from 'react-icons/fi';
 
 // Adjust the path to wherever you saved the service.
 import { uploadDocument } from '../../services/documentUploadService';
@@ -287,8 +285,8 @@ const UploadForm = () => {
           {/* Header */}
           <div className="upl-header">
             <div className="upl-logo" aria-hidden="true">
-              A
-            </div>
+  <FiFileText />
+</div>
             <div>
               <h1 className="upl-title">Upload a document</h1>
               <p className="upl-subtitle">Add the details, then choose an image or PDF.</p>

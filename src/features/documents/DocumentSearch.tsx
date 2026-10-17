@@ -7,6 +7,7 @@ import "./DocumentSearch.css";
 import { useSearchDocuments } from "../../hooks/useSearchDocuments";
 import { useTagSuggestions } from "../../hooks/useTagSuggestions";
 import type { SearchDocumentPayload } from "../../services/documentSearchService";
+import Pagination from "./Pagination";
 
 import type {
   DocumentItem,
@@ -396,14 +397,6 @@ const ResultsList = ({ docs, total, onPreview }: ResultsListProps) => (
         </div>
       </div>
     ))}
-
-    {docs.length === 0 ? (
-      <div className="srch-foot">No documents found.</div>
-    ) : (
-      <div className="srch-foot">
-        Showing {docs.length} of {total} records
-      </div>
-    )}
   </div>
 );
 
@@ -487,49 +480,116 @@ const DocumentSearch = () => {
   const [hasSearched, setHasSearched] = useState(false);
   const [authError, setAuthError] = useState("");
 
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+  const [lastPayload, setLastPayload] =
+    useState<SearchDocumentPayload | null>(null);
+
   const searchMutation = useSearchDocuments();
 
-  const handleSearch = (payload: SearchDocumentPayload) => {
+  // All API searches, including pagination, use this function.
+  const runSearch = (
+    payload: SearchDocumentPayload,
+    page: number,
+    size: number,
+  ) => {
     const token = localStorage.getItem("token");
 
     if (!token) {
-      setAuthError("Authentication token not found. Please log in again.");
+      setAuthError(
+        "Authentication token not found. Please log in again.",
+      );
       setDocs([]);
       setTotal(0);
       setHasSearched(false);
       return;
     }
 
+    const requestPayload: SearchDocumentPayload = {
+      ...payload,
+      start: (page - 1) * size,
+      length: size,
+    };
+
     setAuthError("");
-    setHasSearched(false);
+    setCurrentPage(page);
+
+    console.log("Searching documents:", {
+      start: requestPayload.start,
+      length: requestPayload.length,
+      page,
+    });
 
     searchMutation.mutate(
-      { payload, token },
+      { payload: requestPayload, token },
       {
         onSuccess: (response) => {
-          const results = response.data ?? [];
+          setDocs((response.data ?? []).map(mapDocument));
 
-          setDocs(results.map(mapDocument));
+          // Use the total matching record count, not data.length.
           setTotal(response.recordsFiltered ?? 0);
           setHasSearched(true);
+        },
+        onError: (error) => {
+          console.error("Document search failed:", error);
+          setDocs([]);
+          setHasSearched(false);
         },
       },
     );
   };
 
+  // Submit filters and start from page 1.
+  const handleSearch = (payload: SearchDocumentPayload) => {
+    setLastPayload(payload);
+    runSearch(payload, 1, pageSize);
+  };
+
+  // Load another page with the same filters.
+  const handlePageChange = (page: number) => {
+    const totalPages = Math.ceil(total / pageSize);
+
+    if (
+      !lastPayload ||
+      searchMutation.isPending ||
+      page < 1 ||
+      page > totalPages ||
+      page === currentPage
+    ) {
+      return;
+    }
+
+    runSearch(lastPayload, page, pageSize);
+  };
+
+  // Changing page size restarts pagination at page 1.
+  const handlePageSizeChange = (size: number) => {
+    setPageSize(size);
+
+    if (lastPayload) {
+      runSearch(lastPayload, 1, size);
+    }
+  };
+
   const handleReset = () => {
     setDocs([]);
     setTotal(0);
+    setCurrentPage(1);
+    setPageSize(10);
+    setLastPayload(null);
     setHasSearched(false);
     setAuthError("");
     searchMutation.reset();
   };
 
+  // Initial search on mount.
   useEffect(() => {
     const token = localStorage.getItem("token");
 
     if (!token) {
-      setAuthError("Authentication token not found. Please log in again.");
+      setAuthError(
+        "Authentication token not found. Please log in again.",
+      );
       return;
     }
 
@@ -548,7 +608,7 @@ const DocumentSearch = () => {
       },
     };
 
-    setAuthError("");
+    setLastPayload(initialPayload);
 
     searchMutation.mutate(
       { payload: initialPayload, token },
@@ -556,6 +616,7 @@ const DocumentSearch = () => {
         onSuccess: (response) => {
           setDocs((response.data ?? []).map(mapDocument));
           setTotal(response.recordsFiltered ?? 0);
+          setCurrentPage(1);
           setHasSearched(true);
         },
         onError: (error) => {
@@ -564,7 +625,7 @@ const DocumentSearch = () => {
       },
     );
 
-    // Run only when the component mounts.
+    // Initial search only.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -617,7 +678,22 @@ const DocumentSearch = () => {
           {searchMutation.isPending ? (
             <p className="srch-foot">Searching documents...</p>
           ) : hasSearched ? (
-            <ResultsList docs={docs} total={total} onPreview={setPreview} />
+            <>
+              <ResultsList
+                docs={docs}
+                total={total}
+                onPreview={setPreview}
+              />
+
+              <Pagination
+                currentPage={currentPage}
+                total={total}
+                pageSize={pageSize}
+                isPending={searchMutation.isPending}
+                onPageChange={handlePageChange}
+                onPageSizeChange={handlePageSizeChange}
+              />
+            </>
           ) : (
             <p className="srch-foot">
               Enter your filters and click Search to find documents.
@@ -627,7 +703,10 @@ const DocumentSearch = () => {
       </div>
 
       {preview && (
-        <PreviewModal doc={preview} onClose={() => setPreview(null)} />
+        <PreviewModal
+          doc={preview}
+          onClose={() => setPreview(null)}
+        />
       )}
     </div>
   );
