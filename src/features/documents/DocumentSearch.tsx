@@ -1,10 +1,13 @@
-import { useState, useEffect } from "react";
+
+import { useState, useEffect, useCallback } from "react";
 import type { KeyboardEvent, FormEvent } from "react";
 
 import "./DocumentSearch.css";
 
 import { useSearchDocuments } from "../../hooks/useSearchDocuments";
 import { useTagSuggestions } from "../../hooks/useTagSuggestions";
+import { useDownloadAllDocuments } from "../../hooks/useDownloadAllDocuments";
+
 import type { SearchDocumentPayload } from "../../services/documentSearchService";
 import Pagination from "./Pagination";
 
@@ -32,8 +35,10 @@ const TagInput = ({ id, value, onChange }: TagInputProps) => {
   const [text, setText] = useState("");
   const [focused, setFocused] = useState(false);
 
-  // Suggestions come from the API based on what the user types
-  const { data: fetched = [], isFetching } = useTagSuggestions(text, focused);
+  const { data: fetched = [], isFetching } = useTagSuggestions(
+    text,
+    focused,
+  );
 
   const add = (raw: string) => {
     const tag = raw.trim();
@@ -79,7 +84,9 @@ const TagInput = ({ id, value, onChange }: TagInputProps) => {
               type="button"
               className="srch-chip-x"
               aria-label={`Remove tag ${tag}`}
-              onClick={() => onChange(value.filter((item) => item !== tag))}
+              onClick={() =>
+                onChange(value.filter((item) => item !== tag))
+              }
             >
               &times;
             </button>
@@ -125,7 +132,9 @@ const TagInput = ({ id, value, onChange }: TagInputProps) => {
           ))}
 
           {isFetching && shown.length === 0 && (
-            <div className="srch-muted-sm px-2 py-1">Searching tags...</div>
+            <div className="srch-muted-sm px-2 py-1">
+              Searching tags...
+            </div>
           )}
         </div>
       )}
@@ -137,7 +146,11 @@ const TagInput = ({ id, value, onChange }: TagInputProps) => {
    SearchForm
 --------------------------------------------------------------------------- */
 
-const SearchForm = ({ onSearch, onReset, isPending }: SearchFormProps) => {
+const SearchForm = ({
+  onSearch,
+  onReset,
+  isPending,
+}: SearchFormProps) => {
   const [major, setMajor] = useState("");
   const [minor, setMinor] = useState("");
   const [tags, setTags] = useState<string[]>([]);
@@ -291,7 +304,7 @@ const SearchForm = ({ onSearch, onReset, isPending }: SearchFormProps) => {
 };
 
 /* ---------------------------------------------------------------------------
-   ResultsList
+   Individual download
 --------------------------------------------------------------------------- */
 
 const handleDownload = async (url: string, fileName: string) => {
@@ -312,7 +325,9 @@ const handleDownload = async (url: string, fileName: string) => {
     link.click();
     link.remove();
 
-    window.URL.revokeObjectURL(blobUrl);
+    window.setTimeout(() => {
+      window.URL.revokeObjectURL(blobUrl);
+    }, 60_000);
   } catch (error) {
     console.error("Download failed:", error);
     alert(
@@ -320,6 +335,10 @@ const handleDownload = async (url: string, fileName: string) => {
     );
   }
 };
+
+/* ---------------------------------------------------------------------------
+   ResultsList
+--------------------------------------------------------------------------- */
 
 const ResultsList = ({ docs, onPreview }: ResultsListProps) => (
   <div className="srch-table" role="table" aria-label="Search results">
@@ -387,7 +406,7 @@ const ResultsList = ({ docs, onPreview }: ResultsListProps) => (
             <button
               type="button"
               className="btn btn-srch-outline btn-sm"
-              onClick={() => handleDownload(doc.fileUrl, doc.name)}
+              onClick={() => handleDownload(doc.fileUrl!, doc.name)}
             >
               Download
             </button>
@@ -476,72 +495,84 @@ const DocumentSearch = () => {
   const [total, setTotal] = useState(0);
   const [hasSearched, setHasSearched] = useState(false);
   const [authError, setAuthError] = useState("");
+  const [pageError, setPageError] = useState("");
+  const [downloadError, setDownloadError] = useState("");
+  const [isPreparingZip, setIsPreparingZip] = useState(false);
 
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
-  const [lastPayload, setLastPayload] = useState<SearchDocumentPayload | null>(
-    null,
-  );
+  const [lastPayload, setLastPayload] =
+    useState<SearchDocumentPayload | null>(null);
 
   const searchMutation = useSearchDocuments();
 
-  // All API searches, including pagination, use this function.
-  const runSearch = (
-    payload: SearchDocumentPayload,
-    page: number,
-    size: number,
-  ) => {
-    const token = localStorage.getItem("token");
+  const {
+    downloadAll,
+    cancelDownload,
+    isDownloading,
+    progress,
+    error: workerError,
+  } = useDownloadAllDocuments();
 
-    if (!token) {
-      setAuthError("Authentication token not found. Please log in again.");
-      setDocs([]);
-      setTotal(0);
-      setHasSearched(false);
-      return;
-    }
+  const isBusy = searchMutation.isPending || isPreparingZip || isDownloading;
 
-    const requestPayload: SearchDocumentPayload = {
-      ...payload,
-      start: (page - 1) * size,
-      length: size,
-    };
+  /* -------------------------------------------------------------------------
+     Search one page
+  ------------------------------------------------------------------------- */
 
-    setAuthError("");
-    setCurrentPage(page);
+  const runSearch = useCallback(
+    (payload: SearchDocumentPayload, page: number, size: number) => {
+      const token = localStorage.getItem("token");
 
-    searchMutation.mutate(
-      { payload: requestPayload, token },
-      {
-        onSuccess: (response) => {
-          setDocs((response.data ?? []).map(mapDocument));
+      if (!token) {
+        setAuthError("Authentication token not found. Please log in again.");
+        setDocs([]);
+        setTotal(0);
+        setHasSearched(false);
+        return;
+      }
 
-          // Use the total matching record count, not data.length.
-          setTotal(response.recordsFiltered ?? 0);
-          setHasSearched(true);
+      const requestPayload: SearchDocumentPayload = {
+        ...payload,
+        start: (page - 1) * size,
+        length: size,
+      };
+
+      setAuthError("");
+      setPageError("");
+      setCurrentPage(page);
+
+      searchMutation.mutate(
+        { payload: requestPayload, token },
+        {
+          onSuccess: (response) => {
+            setDocs((response.data ?? []).map(mapDocument));
+            setTotal(response.recordsFiltered ?? 0);
+            setHasSearched(true);
+          },
+          onError: (error) => {
+            console.error("Document search failed:", error);
+            setDocs([]);
+            setHasSearched(false);
+            setPageError("Unable to load documents. Please try again.");
+          },
         },
-        onError: (error) => {
-          console.error("Document search failed:", error);
-          setDocs([]);
-          setHasSearched(false);
-        },
-      },
-    );
-  };
+      );
+    },
+    [searchMutation],
+  );
 
-  // Submit filters and start from page 1.
   const handleSearch = (payload: SearchDocumentPayload) => {
     setLastPayload(payload);
     runSearch(payload, 1, pageSize);
   };
 
-  // Load another page with the same filters.
   const handlePageChange = (page: number) => {
     const totalPages = Math.ceil(total / pageSize);
 
     if (
       !lastPayload ||
-      searchMutation.isPending ||
+      isBusy ||
       page < 1 ||
       page > totalPages ||
       page === currentPage
@@ -552,7 +583,6 @@ const DocumentSearch = () => {
     runSearch(lastPayload, page, pageSize);
   };
 
-  // Changing page size restarts pagination at page 1.
   const handlePageSizeChange = (size: number) => {
     setPageSize(size);
 
@@ -561,16 +591,128 @@ const DocumentSearch = () => {
     }
   };
 
+  /* -------------------------------------------------------------------------
+     Fetch every page matching the active search filters.
+     Requires useSearchDocuments to expose TanStack Query's mutateAsync.
+  ------------------------------------------------------------------------- */
+
+  const getAllMatchingDocuments = useCallback(
+    async (
+      payload: SearchDocumentPayload,
+      token: string,
+    ): Promise<DocumentItem[]> => {
+      const batchSize = 100;
+      const allDocuments: DocumentItem[] = [];
+      let start = 0;
+      let matchingTotal = 0;
+
+      do {
+        const response = await searchMutation.mutateAsync({
+          payload: {
+            ...payload,
+            start,
+            length: batchSize,
+          },
+          token,
+        });
+
+        const pageDocuments = response.data ?? [];
+
+        matchingTotal = response.recordsFiltered ?? 0;
+
+        if (pageDocuments.length === 0) {
+          break;
+        }
+
+        allDocuments.push(...pageDocuments.map(mapDocument));
+        start += pageDocuments.length;
+
+        // Prevent an endless loop if the server returns inconsistent totals.
+        if (start >= matchingTotal) {
+          break;
+        }
+      } while (start < matchingTotal);
+
+      return allDocuments;
+    },
+    [searchMutation],
+  );
+
+  /* -------------------------------------------------------------------------
+     Download all matching documents as one ZIP using the Web Worker.
+  ------------------------------------------------------------------------- */
+
+  const handleDownloadAll = async () => {
+    if (!lastPayload || isBusy) {
+      return;
+    }
+
+    const token = localStorage.getItem("token");
+
+    if (!token) {
+      setAuthError("Authentication token not found. Please log in again.");
+      return;
+    }
+
+    setAuthError("");
+    setPageError("");
+    setDownloadError("");
+    setIsPreparingZip(true);
+
+    try {
+      const allDocuments = await getAllMatchingDocuments(
+        lastPayload,
+        token,
+      );
+
+      const files = allDocuments
+        .filter(
+          (doc) =>
+            typeof doc.fileUrl === "string" && doc.fileUrl.trim() !== "",
+        )
+        .map((doc) => ({
+          url: doc.fileUrl!,
+          name: doc.name || `document-${doc.id}`,
+        }));
+
+      if (files.length === 0) {
+        setDownloadError(
+          "No downloadable files were found in the matching documents.",
+        );
+        return;
+      }
+
+      downloadAll(files, token);
+    } catch (error) {
+      console.error("Failed to prepare ZIP download:", error);
+
+      setDownloadError(
+        error instanceof Error
+          ? error.message
+          : "Unable to prepare the ZIP download.",
+      );
+    } finally {
+      setIsPreparingZip(false);
+    }
+  };
+
+  /* -------------------------------------------------------------------------
+     Reset
+  ------------------------------------------------------------------------- */
+
   const handleReset = () => {
-    // Reset the search filters and pagination
     setDocs([]);
     setTotal(0);
     setCurrentPage(1);
     setPageSize(10);
     setHasSearched(false);
     setAuthError("");
+    setPageError("");
+    setDownloadError("");
+    setLastPayload(null);
 
-    // Default payload: no filters, fetch all documents
+    searchMutation.reset();
+
     const defaultPayload: SearchDocumentPayload = {
       major_head: "",
       minor_head: "",
@@ -587,15 +729,13 @@ const DocumentSearch = () => {
     };
 
     setLastPayload(defaultPayload);
-
-    // Clear the previous mutation error/state
-    searchMutation.reset();
-
-    // Call the API to fetch all documents
     runSearch(defaultPayload, 1, 10);
   };
 
-  // Initial search on mount.
+  /* -------------------------------------------------------------------------
+     Initial search
+  ------------------------------------------------------------------------- */
+
   useEffect(() => {
     const token = localStorage.getItem("token");
 
@@ -620,25 +760,15 @@ const DocumentSearch = () => {
     };
 
     setLastPayload(initialPayload);
+    runSearch(initialPayload, 1, 10);
 
-    searchMutation.mutate(
-      { payload: initialPayload, token },
-      {
-        onSuccess: (response) => {
-          setDocs((response.data ?? []).map(mapDocument));
-          setTotal(response.recordsFiltered ?? 0);
-          setCurrentPage(1);
-          setHasSearched(true);
-        },
-        onError: (error) => {
-          console.error("Initial document search failed:", error);
-        },
-      },
-    );
-
-    // Initial search only.
+    // Run the initial search once on mount.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  /* -------------------------------------------------------------------------
+     Render
+  ------------------------------------------------------------------------- */
 
   return (
     <div className="srch-page">
@@ -655,7 +785,7 @@ const DocumentSearch = () => {
         <SearchForm
           onSearch={handleSearch}
           onReset={handleReset}
-          isPending={searchMutation.isPending}
+          isPending={isBusy}
         />
 
         {authError && (
@@ -664,7 +794,13 @@ const DocumentSearch = () => {
           </p>
         )}
 
-        {searchMutation.isError && (
+        {pageError && (
+          <p role="alert" className="text-danger mt-3">
+            {pageError}
+          </p>
+        )}
+
+        {searchMutation.isError && !isPreparingZip && (
           <p role="alert" className="text-danger mt-3">
             Search failed: {searchMutation.error.message}
           </p>
@@ -679,24 +815,72 @@ const DocumentSearch = () => {
             <button
               type="button"
               className="btn btn-primary"
-              disabled={!hasSearched || total === 0}
+              disabled={!hasSearched || total === 0 || isBusy}
+              onClick={handleDownloadAll}
             >
-              <i className="bi bi-file-earmark-zip me-2"></i>
-              Download All
+              <i className="bi bi-file-earmark-zip me-2" />
+
+              {isPreparingZip
+                ? "Collecting documents..."
+                : isDownloading
+                  ? `Creating ZIP (${progress?.completed ?? 0}/${progress?.total ?? 0})`
+                  : "Download All"}
             </button>
           </div>
 
+          {isPreparingZip && (
+            <p className="srch-foot" role="status" aria-live="polite">
+              Collecting all matching documents. You can continue to use
+              the browser while the files are retrieved.
+            </p>
+          )}
+
+          {isDownloading && progress && (
+            <div className="mt-3" role="status" aria-live="polite">
+              <p className="mb-1">
+                Processing {progress.completed} of {progress.total} files
+                {progress.currentFile
+                  ? ` — ${progress.currentFile}`
+                  : ""}
+              </p>
+
+              <progress
+                value={progress.completed}
+                max={progress.total || 1}
+                style={{ width: "100%" }}
+              />
+
+              <button
+                type="button"
+                className="btn btn-srch-outline btn-sm mt-2"
+                onClick={cancelDownload}
+              >
+                Cancel ZIP creation
+              </button>
+            </div>
+          )}
+
+          {(downloadError || workerError) && (
+            <p role="alert" className="text-danger mt-3">
+              {downloadError || workerError}
+            </p>
+          )}
+
           {searchMutation.isPending ? (
-            <p className="srch-foot">Searching documents...</p>
+            <p className="srch-foot">
+              {isPreparingZip
+                ? "Collecting documents for ZIP..."
+                : "Searching documents..."}
+            </p>
           ) : hasSearched ? (
             <>
-              <ResultsList docs={docs} total={total} onPreview={setPreview} />
+              <ResultsList docs={docs} onPreview={setPreview} total={0} />
 
               <Pagination
                 currentPage={currentPage}
                 total={total}
                 pageSize={pageSize}
-                isPending={searchMutation.isPending}
+                isPending={isBusy}
                 onPageChange={handlePageChange}
                 onPageSizeChange={handlePageSizeChange}
               />
@@ -710,7 +894,10 @@ const DocumentSearch = () => {
       </div>
 
       {preview && (
-        <PreviewModal doc={preview} onClose={() => setPreview(null)} />
+        <PreviewModal
+          doc={preview}
+          onClose={() => setPreview(null)}
+        />
       )}
     </div>
   );
