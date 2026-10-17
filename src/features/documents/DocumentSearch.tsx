@@ -29,7 +29,6 @@ import {
    TagInput
 --------------------------------------------------------------------------- */
 
-
 const TagInput = ({ id, value, onChange }: TagInputProps) => {
   const [text, setText] = useState("");
   const [focused, setFocused] = useState(false);
@@ -404,7 +403,6 @@ const ResultsList = ({ docs, onPreview }: ResultsListProps) => (
    PreviewModal
 --------------------------------------------------------------------------- */
 
-
 const PreviewModal = ({ doc, onClose }: PreviewModalProps) => (
   <div className="srch-overlay" onClick={onClose}>
     <div
@@ -482,8 +480,9 @@ const DocumentSearch = () => {
 
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
-  const [lastPayload, setLastPayload] =
-    useState<SearchDocumentPayload | null>(null);
+  const [lastPayload, setLastPayload] = useState<SearchDocumentPayload | null>(
+    null,
+  );
 
   const searchMutation = useSearchDocuments();
 
@@ -496,9 +495,7 @@ const DocumentSearch = () => {
     const token = localStorage.getItem("token");
 
     if (!token) {
-      setAuthError(
-        "Authentication token not found. Please log in again.",
-      );
+      setAuthError("Authentication token not found. Please log in again.");
       setDocs([]);
       setTotal(0);
       setHasSearched(false);
@@ -566,14 +563,37 @@ const DocumentSearch = () => {
   };
 
   const handleReset = () => {
+    // Reset the search filters and pagination
     setDocs([]);
     setTotal(0);
     setCurrentPage(1);
     setPageSize(10);
-    setLastPayload(null);
     setHasSearched(false);
     setAuthError("");
+
+    // Default payload: no filters, fetch all documents
+    const defaultPayload: SearchDocumentPayload = {
+      major_head: "",
+      minor_head: "",
+      from_date: "",
+      to_date: "",
+      tags: [{ tag_name: "" }, { tag_name: "" }],
+      uploaded_by: "",
+      start: 0,
+      length: 10,
+      filterId: "",
+      search: {
+        value: "",
+      },
+    };
+
+    setLastPayload(defaultPayload);
+
+    // Clear the previous mutation error/state
     searchMutation.reset();
+
+    // Call the API to fetch all documents
+    runSearch(defaultPayload, 1, 10);
   };
 
   // Initial search on mount.
@@ -581,9 +601,7 @@ const DocumentSearch = () => {
     const token = localStorage.getItem("token");
 
     if (!token) {
-      setAuthError(
-        "Authentication token not found. Please log in again.",
-      );
+      setAuthError("Authentication token not found. Please log in again.");
       return;
     }
 
@@ -673,11 +691,7 @@ const DocumentSearch = () => {
             <p className="srch-foot">Searching documents...</p>
           ) : hasSearched ? (
             <>
-              <ResultsList
-                docs={docs}
-                total={total}
-                onPreview={setPreview}
-              />
+              <ResultsList docs={docs} total={total} onPreview={setPreview} />
 
               <Pagination
                 currentPage={currentPage}
@@ -697,10 +711,7 @@ const DocumentSearch = () => {
       </div>
 
       {preview && (
-        <PreviewModal
-          doc={preview}
-          onClose={() => setPreview(null)}
-        />
+        <PreviewModal doc={preview} onClose={() => setPreview(null)} />
       )}
     </div>
   );
