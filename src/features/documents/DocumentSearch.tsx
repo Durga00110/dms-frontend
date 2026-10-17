@@ -6,100 +6,28 @@ import "./DocumentSearch.css";
 
 import { useSearchDocuments } from "../../hooks/useSearchDocuments";
 import { useTagSuggestions } from "../../hooks/useTagSuggestions";
+import type { SearchDocumentPayload } from "../../services/documentSearchService";
+
 import type {
-  DocumentItem as ApiDocumentItem,
-  SearchDocumentPayload,
-} from "../../services/documentSearchService";
+  DocumentItem,
+  SearchFormProps,
+  TagInputProps,
+  ResultsListProps,
+  PreviewModalProps,
+} from "../../types/documentSearch";
 
-type FileKind = "pdf" | "image" | "other";
-
-interface DocumentItem {
-  id: string;
-  name: string;
-  major: string;
-  minor: string;
-  date: string;
-  tags: string[];
-  kind: FileKind;
-  fileUrl: string;
-}
-
-interface SearchFormProps {
-  onSearch: (payload: SearchDocumentPayload) => void;
-  onReset: () => void;
-  isPending: boolean;
-}
-
-const PERSONAL_NAMES = ["John", "Tom", "Emily", "Priya"];
-const PROFESSIONAL_DEPTS = ["Accounts", "HR", "IT", "Finance"];
-
-const KIND_LABEL: Record<FileKind, string> = {
-  pdf: "PDF",
-  image: "IMG",
-  other: "FILE",
-};
-
-const formatDateForApi = (date: string) => {
-  if (!date) return "";
-
-  const [year, month, day] = date.split("-");
-  return `${day}-${month}-${year}`;
-};
-
-const getFileKind = (fileName: string): FileKind => {
-  const extension = fileName.split(".").pop()?.toLowerCase();
-
-  if (extension === "pdf") return "pdf";
-
-  if (["png", "jpg", "jpeg", "gif", "webp"].includes(extension ?? "")) {
-    return "image";
-  }
-
-  return "other";
-};
-
-const getDocumentName = (doc: ApiDocumentItem): string => {
-  const record = doc as ApiDocumentItem & {
-    file_name?: string;
-    document_name?: string;
-    name?: string;
-  };
-
-  return (
-    record.file_name ||
-    record.document_name ||
-    record.name ||
-    doc.file_url?.split("/").pop()?.split("?")[0] ||
-    `Document ${doc.document_id}`
-  );
-};
-
-const mapDocument = (doc: ApiDocumentItem): DocumentItem => {
-  const name = getDocumentName(doc);
-
-  return {
-    id: String(doc.document_id),
-    name,
-    major: doc.major_head || "",
-    minor: doc.minor_head || "",
-    date: doc.document_date || "",
-    tags: Array.isArray(doc.tags)
-      ? doc.tags.map((tag) => tag.tag_name).filter(Boolean)
-      : [],
-    kind: getFileKind(name),
-    fileUrl: doc.file_url || "",
-  };
-};
+import {
+  PERSONAL_NAMES,
+  PROFESSIONAL_DEPTS,
+  KIND_LABEL,
+  formatDateForApi,
+  mapDocument,
+} from "../../utils/documentSearch.utils";
 
 /* ---------------------------------------------------------------------------
    TagInput
 --------------------------------------------------------------------------- */
 
-interface TagInputProps {
-  id: string;
-  value: string[];
-  onChange: (tags: string[]) => void;
-}
 
 const TagInput = ({ id, value, onChange }: TagInputProps) => {
   const [text, setText] = useState("");
@@ -367,11 +295,6 @@ const SearchForm = ({ onSearch, onReset, isPending }: SearchFormProps) => {
    ResultsList
 --------------------------------------------------------------------------- */
 
-interface ResultsListProps {
-  docs: DocumentItem[];
-  total: number;
-  onPreview: (doc: DocumentItem) => void;
-}
 const handleDownload = async (url: string, fileName: string) => {
   try {
     const response = await fetch(url);
@@ -440,11 +363,16 @@ const ResultsList = ({ docs, total, onPreview }: ResultsListProps) => (
           className="srch-cell srch-cell--tags"
           data-label="Tags"
         >
-          {doc.tags.map((tag) => (
-            <span key={tag} className="srch-mini-tag">
-              {tag}
-            </span>
-          ))}
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="16"
+            height="16"
+            fill="currentColor"
+            className="bi bi-bookmark-fill"
+            viewBox="0 0 16 16"
+          >
+            <path d="M2 2v13.5a.5.5 0 0 0 .74.439L8 13.069l5.26 2.87A.5.5 0 0 0 14 15.5V2a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2" />
+          </svg>
         </div>
 
         <div role="cell" className="srch-cell srch-row-actions">
@@ -483,10 +411,6 @@ const ResultsList = ({ docs, total, onPreview }: ResultsListProps) => (
    PreviewModal
 --------------------------------------------------------------------------- */
 
-interface PreviewModalProps {
-  doc: DocumentItem;
-  onClose: () => void;
-}
 
 const PreviewModal = ({ doc, onClose }: PreviewModalProps) => (
   <div className="srch-overlay" onClick={onClose}>

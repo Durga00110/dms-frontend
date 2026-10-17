@@ -4,6 +4,11 @@ import type { ChangeEvent, DragEvent, FormEvent, KeyboardEvent } from 'react';
 // Bootstrap must load BEFORE our own CSS so our overrides win.
 import 'bootstrap/dist/css/bootstrap.min.css';
 import './UploadForm.css';
+import type {
+  TagInputProps,
+  FileDropzoneProps,
+  UploadFormValues,
+} from '../../types/uploadForm.types';
 
 // Adjust the path to wherever you saved the service.
 import { uploadDocument } from '../../services/documentUploadService';
@@ -27,33 +32,27 @@ const formatSize = (bytes: number) =>
     ? `${Math.max(1, Math.round(bytes / 1024))} KB`
     : `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 
-const validate = (v: {
-  date: string;
-  major: string;
-  minor: string;
-  file: File | null;
-}): string | null => {
+const validate = (v: UploadFormValues): string | null => {
   if (!v.date) return 'Please choose a document date.';
   if (!v.major) return 'Please select a category.';
   if (!v.minor) return 'Please select a name or department.';
   if (!v.file) return 'Please choose a file to upload.';
-  const okType = v.file.type === 'application/pdf' || v.file.type.startsWith('image/');
+
+  const okType =
+    v.file.type === 'application/pdf' || v.file.type.startsWith('image/');
+
   if (!okType) return 'Only images and PDF files are allowed.';
+
   if (v.file.size > MAX_FILE_MB * 1024 * 1024) {
     return `File must be ${MAX_FILE_MB} MB or smaller.`;
   }
+
   return null;
 };
 
 /* ---------------------------------------------------------------------------
    TagInput: chips + suggestions
    --------------------------------------------------------------------------- */
-interface TagInputProps {
-  id: string;
-  value: string[];
-  onChange: (tags: string[]) => void;
-  suggestions: string[];
-}
 
 const TagInput = ({ id, value, onChange, suggestions }: TagInputProps) => {
   const [text, setText] = useState('');
@@ -136,10 +135,7 @@ const TagInput = ({ id, value, onChange, suggestions }: TagInputProps) => {
 /* ---------------------------------------------------------------------------
    FileDropzone: drop or browse, then shows the chosen file
    --------------------------------------------------------------------------- */
-interface FileDropzoneProps {
-  file: File | null;
-  onChange: (file: File | null) => void;
-}
+
 
 const FileDropzone = ({ file, onChange }: FileDropzoneProps) => {
   const inputRef = useRef<HTMLInputElement | null>(null);
@@ -258,8 +254,6 @@ const UploadForm = () => {
     // Adjust these two lines to wherever your login step stores them.
     const token = localStorage.getItem('token');
     const userId = localStorage.getItem('test_mdr');
-    console.log('Token:', token);
-    console.log('User ID:', userId);
     if (!token || !userId) {
       setError('You are not logged in. Please log in again.');
       return;

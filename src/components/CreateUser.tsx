@@ -14,7 +14,6 @@ const CreateUser = () => {
 
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
-    console.log('Create user:', { username, password });
     setSubmitted(true);
     setUsername('');
     setPassword('');

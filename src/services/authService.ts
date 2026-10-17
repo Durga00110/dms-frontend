@@ -78,7 +78,6 @@ const isFailure = (res: ApiResponse<unknown>) =>
 // Throwing means React Query's onError / isError / error handle it for us.
 const unwrap = <T>(res: ApiResponse<T>): T => {
   if (isFailure(res)) {
-    console.log('API responded with failure:', res);
     throw new ApiError(
       typeof res.data === 'string' && res.data ? res.data : DEFAULT_ERROR
     );
