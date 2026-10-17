@@ -1,6 +1,6 @@
-
 import { useState } from "react";
 import { NavLink, Outlet, useNavigate } from "react-router-dom";
+import "./AppLayout.css";
 import {
   FiFileText,
   FiGrid,
@@ -11,11 +11,8 @@ import {
   FiX,
   FiChevronRight,
 } from "react-icons/fi";
-
 import { clearToken } from "../services/authService";
 import ChatbotWidget from "./ChatbotWidget";
-
-import "./AppLayout.css";
 
 const links = [
   { to: "/admin", label: "Admin", icon: FiGrid },
@@ -71,9 +68,7 @@ const AppLayout = () => {
           {/* Navigation */}
           <div
             id="app-nav"
-            className={`app-nav-collapse navbar-collapse ${
-              open ? "show" : ""
-            }`}
+            className={`app-nav-collapse navbar-collapse ${open ? "show" : ""}`}
           >
             <ul className="navbar-nav app-nav-links">
               {links.map(({ to, label, icon: Icon }) => (
