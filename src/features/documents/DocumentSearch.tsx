@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import type { KeyboardEvent, FormEvent } from "react";
 
-import "bootstrap/dist/css/bootstrap.min.css";
 import "./DocumentSearch.css";
 
 import { useSearchDocuments } from "../../hooks/useSearchDocuments";

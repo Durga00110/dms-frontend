@@ -17,7 +17,6 @@ import {
 import * as yup from "yup";
 
 // Bootstrap must load BEFORE our own CSS so our overrides win.
-import "bootstrap/dist/css/bootstrap.min.css";
 import "./LoginPage.css";
 
 const LoginPage = () => {

@@ -14,7 +14,6 @@ import {
 
 import { clearToken } from "../services/authService";
 
-import "bootstrap/dist/css/bootstrap.min.css";
 import "./AppLayout.css";
 
 const links = [
