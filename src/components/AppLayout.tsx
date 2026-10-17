@@ -13,6 +13,7 @@ import {
 } from "react-icons/fi";
 
 import { clearToken } from "../services/authService";
+import ChatbotWidget from "./ChatbotWidget";
 
 import "./AppLayout.css";
 
@@ -117,6 +118,7 @@ const AppLayout = () => {
       <main className="app-main">
         <Outlet />
       </main>
+      <ChatbotWidget />
     </div>
   );
 };

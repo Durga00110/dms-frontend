@@ -10,6 +10,7 @@ A React and TypeScript single-page application for OTP sign-in, document upload,
 - Document search by category, subcategory, tags, and date range.
 - Server-side search pagination with selectable page sizes.
 - PDF and image previews, individual file downloads, and a ZIP download of all matching search results.
+- A floating chatbot launcher on protected application pages.
 - Admin user-creation form with client-side validation.
 
 ## Requirements
@@ -93,6 +94,7 @@ The application entry point is [`src/main.tsx`](./src/main.tsx). Route compositi
 - Search and upload are connected to the backend API. The category and subcategory options currently come from frontend constants rather than API lookups.
 - The search result rows currently display a bookmark icon in the Tags column instead of rendering each document's tag text.
 - The admin user-creation form validates input and displays a success message locally; it is not currently connected to a create-user API.
+- The floating chatbot panel is a UI placeholder and is not connected to a chatbot service.
 - Individual file downloads use browser `fetch`; the file host must permit the request (including cross-origin requests where applicable).
 
 ## Available scripts

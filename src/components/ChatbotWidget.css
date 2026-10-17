@@ -1,0 +1,122 @@
+.chatbot-widget {
+  position: fixed;
+  right: 24px;
+  bottom: 24px;
+  z-index: 1100;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 12px;
+}
+
+.chatbot-launcher {
+  display: inline-flex;
+  min-height: 54px;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 0 20px;
+  border: 0;
+  border-radius: 999px;
+  background: #174b3b;
+  box-shadow: 0 8px 24px rgb(18 60 48 / 24%);
+  color: #fff;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background-color 180ms ease, transform 180ms ease;
+}
+
+.chatbot-launcher svg {
+  width: 20px;
+  height: 20px;
+}
+
+.chatbot-launcher:hover {
+  transform: translateY(-2px);
+  background: #20634c;
+}
+
+.chatbot-panel {
+  width: min(360px, calc(100vw - 32px));
+  overflow: hidden;
+  border: 1px solid #e3e9e4;
+  border-radius: 16px;
+  background: #fff;
+  box-shadow: 0 12px 36px rgb(18 60 48 / 18%);
+}
+
+.chatbot-panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18px 20px;
+  background: #174b3b;
+  color: #fff;
+}
+
+.chatbot-panel-header h2 {
+  margin: 0;
+  font-size: 17px;
+  font-weight: 700;
+}
+
+.chatbot-panel-header p {
+  margin: 4px 0 0;
+  color: rgb(255 255 255 / 78%);
+  font-size: 12px;
+}
+
+.chatbot-close {
+  display: grid;
+  width: 36px;
+  height: 36px;
+  flex: 0 0 36px;
+  place-items: center;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: #fff;
+  font-size: 20px;
+  cursor: pointer;
+}
+
+.chatbot-close:hover {
+  background: rgb(255 255 255 / 14%);
+}
+
+.chatbot-panel-body {
+  padding: 22px 20px;
+  color: #536158;
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.chatbot-panel-body p {
+  margin: 0;
+}
+
+.chatbot-launcher:focus-visible,
+.chatbot-close:focus-visible {
+  outline: 3px solid #79b99a;
+  outline-offset: 3px;
+}
+
+@media (max-width: 480px) {
+  .chatbot-widget {
+    right: 16px;
+    bottom: 16px;
+  }
+
+  .chatbot-launcher {
+    min-height: 50px;
+    padding: 0 17px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .chatbot-launcher {
+    transition: none;
+  }
+}
